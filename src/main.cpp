@@ -38,32 +38,32 @@ void packetChannels() {
                  JOYSTICK_HIGH);
   joystick.setYAxis(-map_data); // NOTE - inverted
 
-  // Rx - Channel 3 - T
+  // Z - Channel 3 - T
   channel_data = crsf.getChannel(3);
   map_data = map(channel_data,
                  CHANNEL_3_LOW_EP,
                  CHANNEL_3_HIGH_EP,
                  JOYSTICK_LOW,
                  JOYSTICK_HIGH);
-  joystick.setRxAxis(map_data);
+  joystick.setZAxis(map_data);
 
-  // Ry - Channel 4 - R
+  // Rx - Channel 4 - R
   channel_data = crsf.getChannel(4);
   map_data = map(channel_data,
                  CHANNEL_4_LOW_EP,
                  CHANNEL_4_HIGH_EP,
                  JOYSTICK_LOW,
                  JOYSTICK_HIGH);
-  joystick.setRyAxis(map_data);
+  joystick.setRxAxis(map_data);
 
-  // Z - Channel 5
+  // Ry - Channel 5
   channel_data = crsf.getChannel(5);
   map_data = map(channel_data,
                  CHANNEL_5_LOW_EP,
                  CHANNEL_5_HIGH_EP,
                  JOYSTICK_LOW,
                  JOYSTICK_HIGH);
-  joystick.setZAxis(map_data);
+  joystick.setRyAxis(map_data);
 
   // Rz - Channel 6
   channel_data = crsf.getChannel(6);
@@ -74,7 +74,7 @@ void packetChannels() {
                  JOYSTICK_HIGH);
   joystick.setRzAxis(map_data);
 
-  // Rx - Channel 7
+  // Throttle - Channel 7
   channel_data = crsf.getChannel(7);
   map_data = map(channel_data,
                  CHANNEL_7_LOW_EP,
@@ -83,7 +83,7 @@ void packetChannels() {
                  JOYSTICK_HIGH);
   joystick.setThrottle(map_data);
 
-  // Rx - Channel 8
+  // Rudder - Channel 8
   channel_data = crsf.getChannel(8);
   map_data = map(channel_data,
                  CHANNEL_8_LOW_EP,
