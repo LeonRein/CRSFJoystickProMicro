@@ -121,7 +121,7 @@ typedef struct crsf_sensor_battery_s
 {
     unsigned voltage : 16;  // V * 10 big endian
     unsigned current : 16;  // A * 10 big endian
-    unsigned capacity : 24; // mah big endian
+    uint32_t capacity : 24; // mah big endian
     unsigned remaining : 8; // %
 } PACKED crsf_sensor_battery_t;
 
