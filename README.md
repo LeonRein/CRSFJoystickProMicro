@@ -8,6 +8,9 @@ Uses 24 Buttons, from which the first 8 are mapped to CRGS Channels 5-12.
 
 ***The Baud Rate of the receiver has to be 250000. This can be configured through WiFi.***
 
+# Tooling 
+This project uses the [Platformio](https://marketplace.visualstudio.com/items?itemName=platformio.platformio-ide) extension for [Visual Studio Code](https://code.visualstudio.com/).
+
 ## BOM
 - Arduino SS Micro form Ebay.
 - BetaFPV ELRS Lite Receiver (Flat Antenna).
