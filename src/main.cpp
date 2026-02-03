@@ -4,7 +4,7 @@
 
 #include "calibration.h"
 
-CrsfSerial crsf(Serial1, AVR_CRSF_BAUDRATE);
+CrsfSerial crsf(Serial1, AVR_CRSF_BAUDRATE, 15);
 
 int channel_data = 0;
 int map_data = 0;
@@ -45,6 +45,8 @@ void crsfLinkDown() {
 }
 
 void setup() {
+  delay(1000);  // Wait for USB Serial to initialize
+  Serial.begin(115200);
   ledOff();
 
   joystick.begin();  // Do not send updates automatically

@@ -1,37 +1,7 @@
 #include "CrsfSerial.h"
 
-// static void hexdump(void *p, size_t len)
-// {
-//     char *data = (char *)p;
-//     while (len > 0)
-//     {
-//         uint8_t linepos = 0;
-//         char* linestart = data;
-//         // Binary part
-//         while (len > 0 && linepos < 16)
-//         {
-//             if (*data < 0x0f)
-//             Serial.write('0');
-//             Serial.print(*data, HEX);
-//             Serial.write(' ');
-//             ++data;
-//             ++linepos;
-//             --len;
-//         }
-
-//         // Spacer to align last line
-//         for (uint8_t i = linepos; i < 16; ++i)
-//             Serial.print("   ");
-
-//         // ASCII part
-//         for (uint8_t i = 0; i < linepos; ++i)
-//             Serial.write((linestart[i] < ' ') ? '.' : linestart[i]);
-//         Serial.println();
-//     }
-// }
-
-CrsfSerial::CrsfSerial(HardwareSerial &port, uint32_t baud) :
-    _port(port), _crc(0xd5), _baud(baud),
+CrsfSerial::CrsfSerial(HardwareSerial &port, uint32_t baud, uint16_t delay_ms) :
+    _port(port), _crc(0xd5), _baud(baud), _delay_ms(delay_ms),
     _lastReceive(0), _lastChannelsPacket(0), _linkIsUp(false),
     _passthroughMode(false)
 {
@@ -43,6 +13,8 @@ CrsfSerial::CrsfSerial(HardwareSerial &port, uint32_t baud) :
 void CrsfSerial::loop()
 {
     handleSerialIn();
+    if (!_passthroughMode)
+        handleDelayedChannels();
 }
 
 void CrsfSerial::handleSerialIn()
@@ -172,33 +144,70 @@ void CrsfSerial::shiftRxBuffer(uint8_t cnt)
 void CrsfSerial::packetChannelsPacked(const crsf_header_t *p)
 {
     crsf_channels_t *ch = (crsf_channels_t *)&p->data;
-    _channels[0] = ch->ch0;
-    _channels[1] = ch->ch1;
-    _channels[2] = ch->ch2;
-    _channels[3] = ch->ch3;
-    _channels[4] = ch->ch4;
-    _channels[5] = ch->ch5;
-    _channels[6] = ch->ch6;
-    _channels[7] = ch->ch7;
-    _channels[8] = ch->ch8;
-    _channels[9] = ch->ch9;
-    _channels[10] = ch->ch10;
-    _channels[11] = ch->ch11;
-    _channels[12] = ch->ch12;
-    _channels[13] = ch->ch13;
-    _channels[14] = ch->ch14;
-    _channels[15] = ch->ch15;
+    timestamp_channels_s *tsch = _txBuffer.getWriteSlot();
+    if (tsch == nullptr) {
+        SerialUSB.println("Buffer full, dropping channels packet");
+        return; // Buffer full, drop packet
+    }
 
+    tsch->timestamp = millis();
+
+    auto rawChannels = tsch->channels;
+
+    rawChannels[0] = ch->ch0;
+    rawChannels[1] = ch->ch1;
+    rawChannels[2] = ch->ch2;
+    rawChannels[3] = ch->ch3;
+    rawChannels[4] = ch->ch4;
+    rawChannels[5] = ch->ch5;
+    rawChannels[6] = ch->ch6;
+    rawChannels[7] = ch->ch7;
+    rawChannels[8] = ch->ch8;
+    rawChannels[9] = ch->ch9;
+    rawChannels[10] = ch->ch10;
+    rawChannels[11] = ch->ch11;
+    rawChannels[12] = ch->ch12;
+    rawChannels[13] = ch->ch13;
+    rawChannels[14] = ch->ch14;
+    rawChannels[15] = ch->ch15;
+
+    
     for (unsigned int i=0; i<CRSF_NUM_CHANNELS; ++i)
-        _channels[i] = map(_channels[i], CRSF_CHANNEL_VALUE_1000, CRSF_CHANNEL_VALUE_2000, 1000, 2000);
+        rawChannels[i] = map(rawChannels[i], CRSF_CHANNEL_VALUE_1000, CRSF_CHANNEL_VALUE_2000, 1000, 2000);
+    
+    _txBuffer.commit();
 
     if (!_linkIsUp && onLinkUp)
         onLinkUp();
     _linkIsUp = true;
     _lastChannelsPacket = millis();
+}
 
-    if (onPacketChannels)
-        onPacketChannels();
+void CrsfSerial::handleDelayedChannels()
+{
+    if (!_txBuffer.isEmpty() && _txBuffer.peek().timestamp + _delay_ms <= millis())
+    {
+        timestamp_channels_s tsch;
+        // Pop the item
+        _txBuffer.pop(tsch);
+
+        // Copy the channels
+        memcpy(_channels, tsch.channels, sizeof(_channels));
+
+        static unsigned int cnt = 0;
+        cnt++;
+
+        if (cnt % 250 == 0)
+        {
+            Serial.print("Delay:");
+            Serial.print(millis() - tsch.timestamp);
+            Serial.print(", buffer size: ");
+            Serial.println(_txBuffer.size());
+        }
+
+        if (onPacketChannels)
+            onPacketChannels();
+    }
 }
 
 void CrsfSerial::packetLinkStatistics(const crsf_header_t *p)
