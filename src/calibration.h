@@ -1,10 +1,10 @@
 #ifndef CALIBRATION
 #define CALIBRATION
 
+#define DELAY_MS 0
+
 #define AXIS_LOW_EP 1000
 #define AXIS_HIGH_EP 2000
-
-
 
 #define CHANNEL_AUX_SW_MID 1510
 #define CHANNEL_AUX_SW_HIGH 2011
